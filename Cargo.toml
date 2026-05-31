@@ -1,0 +1,28 @@
+[package]
+name = "buf_redux_ng"
+version = "0.8.4"
+authors = [
+    "Austin Bonander <austin.bonander@gmail.com>",
+    "Carlo Deutschmann <deutschmanncarlo@gmail.com>",
+]
+edition = "2015"
+description = "Maintenance fork of the unmaintained `buf_redux` 0.8.4 with the `trailing_semicolon_in_macro` future-incompatibility warnings fixed. Drop-in replacement; otherwise identical to the original."
+documentation = "https://docs.rs/buf_redux_ng"
+readme = "README.md"
+keywords = ["io", "buffer", "buffered"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/CarloTUM/buf_redux_ng"
+
+[dependencies.memchr]
+version = "2.0"
+
+[dependencies.safemem]
+version = "0.3"
+
+[features]
+default = ["slice-deque"]
+nightly = ["slice-deque/unstable"]
+
+[target."cfg(any(unix, windows))".dependencies.slice-deque]
+version = "0.2"
+optional = true
