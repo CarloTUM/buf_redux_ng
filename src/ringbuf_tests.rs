@@ -28,13 +28,11 @@ use std_tests::ShortReader;
 
 macro_rules! assert_capacity {
     ($buf:expr, $cap:expr) => {
-        let cap = $buf.capacity();
-            if cfg!(windows) {
-            // Windows' minimum allocation size is 64K
-            assert_eq!(cap, ::std::cmp::max(64 * 1024, cap));
-        } else {
-            assert_eq!(cap, $cap);
-        }
+        // Ringbuffer capacities are rounded up to the platform's allocation granularity:
+        // usually the page size (4 KiB, but 16 KiB on Apple Silicon), 64 KiB on Windows.
+        let granularity = Buffer::with_capacity_ringbuf(1).capacity();
+        let expected = ($cap + granularity - 1) / granularity * granularity;
+        assert_eq!($buf.capacity(), expected);
     }
 }
 
