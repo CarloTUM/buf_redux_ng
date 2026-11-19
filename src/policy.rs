@@ -76,6 +76,7 @@ impl ReaderPolicy for StdPolicy {}
 ///
 /// ### Example
 /// ```rust
+/// # extern crate buf_redux_ng as buf_redux;
 /// use buf_redux::BufReader;
 /// use buf_redux::policy::MinBuffered;
 /// use std::io::{BufRead, Cursor};
