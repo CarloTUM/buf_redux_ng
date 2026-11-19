@@ -1,82 +1,107 @@
-# buf\_redux\_ng
+# buf_redux_ng
 
-> Maintenance fork of [`buf_redux`](https://crates.io/crates/buf_redux) 0.8.4 (unmaintained).
-> Only change: removes the trailing `;` in the `do_read!`/`flush_amt!` macros to silence the
-> `trailing_semicolon_in_macro` future-incompatibility warning. Drop-in replacement.
+[![crates.io](https://img.shields.io/crates/v/buf_redux_ng.svg)](https://crates.io/crates/buf_redux_ng)
+[![docs.rs](https://docs.rs/buf_redux_ng/badge.svg)](https://docs.rs/buf_redux_ng)
+[![License: MIT OR Apache-2.0](https://img.shields.io/crates/l/buf_redux_ng.svg)](#license)
+[![CI](https://github.com/CarloTUM/buf_redux_ng/actions/workflows/ci.yml/badge.svg)](https://github.com/CarloTUM/buf_redux_ng/actions/workflows/ci.yml)
 
-Drop-in replacements for buffered I/O types in `std::io`.
+Drop-in replacements for `std::io::BufReader`, `BufWriter` and `LineWriter` that give you
+direct control over the buffer and pluggable buffering policies.
 
-These replacements retain the method names/signatures and implemented traits of their stdlib
-counterparts, making replacement as simple as swapping the import of the type.
+`buf_redux_ng` is a maintained fork of [`buf_redux`](https://crates.io/crates/buf_redux) 0.8.4,
+whose repository is archived
+([RUSTSEC-2023-0028](https://rustsec.org/advisories/RUSTSEC-2023-0028.html)).
+The API matches `buf_redux` 0.8.4 exactly. The only code change fixes the warning
+*"the following packages contain code that will be rejected by a future version of Rust:
+buf_redux v0.8.4"* (lint `trailing_semicolon_in_macro`).
 
-### More Direct Control
+## Migrating from `buf_redux`
 
-All replacement types provide methods to:
-* Increase the capacity of the buffer
-* Get the number of available bytes as well as the total capacity of the buffer
-* Consume the wrapper without losing data
+Change one line in `Cargo.toml`. Your `use buf_redux::...` imports keep working:
 
-`BufReader` provides methods to:
-* Access the buffer through an `&`-reference without performing I/O
-* Force unconditional reads into the buffer
-* Get a `Read` adapter which empties the buffer and then pulls from the inner reader directly
-* Shuffle bytes down to the beginning of the buffer to make room for more reading
-* Get inner reader and trimmed buffer with the remaining data
+```toml
+[dependencies]
+buf_redux = { package = "buf_redux_ng", version = "0.8", default-features = false }
+```
 
-`BufWriter` and `LineWriter` provide methods to:
-* Flush the buffer and unwrap the inner writer unconditionally.
+You can also depend on it under its own name and import from `buf_redux_ng::` instead:
 
-### More Sensible and Customizable Buffering Behavior
-Tune the behavior of the buffer to your specific use-case using the types in the
-`policy` module:
+```toml
+[dependencies]
+buf_redux_ng = { version = "0.8", default-features = false }
+```
 
-* Refine `BufReader`'s behavior by implementing the `ReaderPolicy` trait or use
-an existing implementation like `MinBuffered` to ensure the buffer always contains
-a minimum number of bytes (until the underlying reader is empty).
+**Getting `buf_redux` through another crate?** A `[patch]` section can't do this swap,
+because Cargo only patches a package with another package of the same name. The crate that
+depends on `buf_redux` has to switch. For `multipart`, use
+[`multipart_ng`](https://crates.io/crates/multipart_ng), which already depends on `buf_redux_ng`.
 
-* Refine `BufWriter`'s behavior by implementing the `WriterPolicy` trait
-or use an existing implementation like `FlushOn` to flush when a particular byte
-appears in the buffer (used to implement `LineWriter`).
+## Feature flags
 
+| Feature       | Default | Description |
+|---------------|---------|-------------|
+| `slice-deque` | yes     | Ringbuffer constructors (`new_ringbuf()`, `with_capacity_ringbuf()`) backed by the [`slice-deque`](https://crates.io/crates/slice-deque) crate. Unix and Windows only. |
+| `nightly`     | no      | Legacy. Relied on unstable APIs that have since been removed from Rust, so it does not build on current nightly compilers. Leave it off. |
+
+> **Disable default features unless you need ringbuffers.** `slice-deque` is unmaintained
+> ([RUSTSEC-2020-0158](https://rustsec.org/advisories/RUSTSEC-2020-0158.html)) and has an
+> unpatched advisory ([RUSTSEC-2021-0047](https://rustsec.org/advisories/RUSTSEC-2021-0047.html),
+> double drop in `SliceDeque::drain_filter`). `buf_redux_ng` never calls `drain_filter`, but
+> `cargo audit` and `cargo deny` still flag the dependency. The feature stays on by default
+> for compatibility with `buf_redux` 0.8.4.
 
 ## Usage
 
-#### [Documentation](http://docs.rs/buf_redux/)
+Swap the import of the type you want to replace:
 
-`Cargo.toml`:
-```toml
-[dependencies]
-buf_redux = "0.2"
-```
-
-`lib.rs` or `main.rs`:
-```rust
-extern crate buf_redux;
-```
-
-And then simply swap the import of the types you want to replace:
-
-#### `BufReader`:
-```
+```diff
 - use std::io::BufReader;
 + use buf_redux::BufReader;
 ```
-#### `BufWriter`:
-```
+
+```diff
 - use std::io::BufWriter;
 + use buf_redux::BufWriter;
 ```
 
-#### `LineWriter`:
-```
+```diff
 - use std::io::LineWriter;
 + use buf_redux::LineWriter;
 ```
 
-### Using `MinBuffered`
-The new `policy::MinBuffered` reader-policy can be used to ensure that `BufReader` always has at least a
-certain number of bytes in its buffer. This can be useful for parsing applications that require a 
-certain amount of lookahead.
+These types keep the method names, signatures and implemented traits of their `std` counterparts.
+(If you didn't use the rename shown above, write `buf_redux_ng::` instead of `buf_redux::`.)
+
+### More direct control
+
+All types provide methods to:
+* increase the capacity of the buffer
+* get the number of buffered bytes and the total capacity
+* consume the wrapper without losing data
+
+`BufReader` provides methods to:
+* access the buffer through a `&`-reference without doing any I/O
+* force unconditional reads into the buffer
+* get a `Read` adapter that drains the buffer and then reads from the inner reader directly
+* shift bytes to the beginning of the buffer to make room for more reads
+* get the inner reader together with a trimmed buffer of the remaining data
+
+`BufWriter` and `LineWriter` provide methods to:
+* flush the buffer and unwrap the inner writer unconditionally
+
+### Customizable buffering policies
+
+The types in the `policy` module let you adjust buffering to your use case:
+
+* Implement `ReaderPolicy` to customize `BufReader`, or use an existing policy such as
+  `MinBuffered`, which keeps a minimum number of bytes in the buffer (until the inner reader
+  is exhausted).
+* Implement `WriterPolicy` to customize `BufWriter`, or use an existing policy such as
+  `FlushOn`, which flushes when a given byte appears in the buffer (`LineWriter` is built on it).
+
+### Example: `MinBuffered`
+
+`MinBuffered` guarantees a minimum amount of lookahead, which is useful for parsers:
 
 ```rust
 use buf_redux::BufReader;
@@ -88,7 +113,7 @@ let data = (1 .. 16).collect::<Vec<u8>>();
 // normally you should use `BufReader::new()` or give a capacity of several KiB or more
 let mut reader = BufReader::with_capacity(8, Cursor::new(data))
     // always at least 4 bytes in the buffer (or until the source is empty)
-    .set_policy(MinBuffered(4)); // always at least 4 bytes in the buffer
+    .set_policy(MinBuffered(4));
 
 // first buffer fill, same as `std::io::BufReader`
 assert_eq!(reader.fill_buf().unwrap(), &[1, 2, 3, 4, 5, 6, 7, 8]);
@@ -106,35 +131,38 @@ reader.consume(5);
 assert_eq!(reader.fill_buf().unwrap(), &[13, 14, 15]);
 ```
 
-### Note: Making Room / Ringbuffers / `slice-deque` Feature
-With policies like `MinBuffered`, that will read into the buffer and consume bytes from it without completely 
-emptying it, normal buffer handling can run out of room to read/write into as all the free space is at the
-head of the buffer. If the amount of data in the buffer is small, you can call `.make_room()` on the buffered
-type to make more room for reading. `MinBuffered` will do this automatically.
+### Making room and ringbuffers
 
-Instead of this, with the `slice-deque` feature, you can instead have your buffered type allocate a *ringbuffer*,
-simply by using the `::new_ringbuf()` or `::with_capacity_ringbuf()` constructors instead of 
-`::new()` or `with_capacity()`, respectively. With a ringbuffer, consuming/flushing bytes 
-from a buffer instantly makes room for more reading/writing at the end.
-However, this has some caveats:
+Policies like `MinBuffered` consume bytes without emptying the buffer, so the free space ends up
+at the front of the buffer and there is no room left to read into. When only a little data is
+buffered, call `.make_room()` to move it to the start. `MinBuffered` does this automatically.
 
-* It is only available on target platforms with virtual memory support, namely fully fledged
-OSes such as Windows and Unix-derivative platforms like Linux, OS X, BSD variants, etc.
+With the `slice-deque` feature you can use a ringbuffer instead: construct the type with
+`::new_ringbuf()` or `::with_capacity_ringbuf()` instead of `::new()` or `::with_capacity()`.
+With a ringbuffer, consuming or flushing bytes immediately frees room at the end. The caveats:
 
-* The default capacity varies based on platform, and custom capacities are rounded up to a
-multiple of their minimum size, typically the page size of the platform.
-Windows' minimum size is comparably quite large (**64 KiB**) due to some legacy reasons,
-so this may be less optimal than the default capacity for a normal buffer (8 KiB) for some
-use-cases.
+* Ringbuffers need virtual memory support, so they only work on full operating systems
+  (Windows, Linux, macOS, the BSDs).
+* Capacities are rounded up to a multiple of the platform's allocation granularity, usually the
+  page size. On Windows that is **64 KiB**, much more than the 8 KiB default of a normal buffer.
+* The buffer reserves twice its capacity in virtual address space. Physical memory use is the
+  same as a normal buffer, but this can matter on 32-bit targets.
+* `slice-deque` brings in the advisories described in [Feature flags](#feature-flags).
 
-* Due to the nature of the virtual-memory trick, the virtual address space the buffer
-allocates will be double its capacity. This means that your program will *appear* to use more
-memory than it would if it was using a normal buffer of the same capacity. The physical memory
-usage will be the same in both cases, but if address space is at a premium in your application
-(32-bit targets) then this may be a concern.
+## Scope of this fork
 
-It is up to you to decide if the benefits outweigh the costs. With a policy like `MinBuffered`,
-it could significantly improve performance.
+- The public API of `buf_redux` 0.8.4 stays as it is. The 0.8.x line gets no new features and
+  no breaking changes.
+- Compatibility fixes for new Rust releases and security fixes are in scope. Please report
+  problems on the [issue tracker](https://github.com/CarloTUM/buf_redux_ng/issues).
+- Cargo produces no future-incompatibility report for this crate on current stable Rust
+  (checked with 1.99).
+
+## Credits
+
+`buf_redux` was written by Austin Bonander
+([abonander/buf_redux](https://github.com/abonander/buf_redux), archived).
+All credit for the design and implementation goes to them.
 
 ## License
 

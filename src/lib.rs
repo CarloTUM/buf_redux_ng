@@ -11,6 +11,20 @@
 // except according to those terms.
 //! Drop-in replacements for buffered I/O types in `std::io`.
 //!
+//! This is `buf_redux_ng`, a maintained fork of [`buf_redux`](https://crates.io/crates/buf_redux)
+//! 0.8.4 with an identical API. Add it under the name `buf_redux` so that existing
+//! `use buf_redux::...` imports keep working:
+//!
+//! ```toml
+//! [dependencies]
+//! buf_redux = { package = "buf_redux_ng", version = "0.8", default-features = false }
+//! ```
+//!
+//! The examples in this documentation use that name. Without the rename, write
+//! `buf_redux_ng::` instead. The default `slice-deque` feature (ringbuffers) is only needed
+//! for the `*_ringbuf()` constructors; see the
+//! [README](https://github.com/CarloTUM/buf_redux_ng#feature-flags) for why you may want it off.
+//!
 //! These replacements retain the method names/signatures and implemented traits of their stdlib
 //! counterparts, making replacement as simple as swapping the import of the type:
 //!

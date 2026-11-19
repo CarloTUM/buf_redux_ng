@@ -1,15 +1,16 @@
 [package]
 name = "buf_redux_ng"
-version = "0.8.4"
+version = "0.8.5"
 authors = [
     "Austin Bonander <austin.bonander@gmail.com>",
     "Carlo Deutschmann <deutschmanncarlo@gmail.com>",
 ]
 edition = "2015"
-description = "Maintenance fork of the unmaintained `buf_redux` 0.8.4 with the `trailing_semicolon_in_macro` future-incompatibility warnings fixed. Drop-in replacement; otherwise identical to the original."
+description = "Maintained drop-in fork of `buf_redux` 0.8.4: std::io::BufReader/BufWriter/LineWriter replacements with direct buffer access and customizable buffering policies. Fixes the trailing_semicolon_in_macro future-incompatibility warning."
 documentation = "https://docs.rs/buf_redux_ng"
 readme = "README.md"
-keywords = ["io", "buffer", "buffered"]
+keywords = ["io", "buffer", "bufreader", "bufwriter", "buf_redux"]
+categories = ["data-structures"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/CarloTUM/buf_redux_ng"
 
