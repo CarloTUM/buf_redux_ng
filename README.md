@@ -11,9 +11,11 @@ direct control over the buffer and pluggable buffering policies.
 `buf_redux_ng` is a maintained fork of [`buf_redux`](https://crates.io/crates/buf_redux) 0.8.4,
 whose repository is archived
 ([RUSTSEC-2023-0028](https://rustsec.org/advisories/RUSTSEC-2023-0028.html)).
-The API matches `buf_redux` 0.8.4 exactly. The only code change fixes the warning
+The API matches `buf_redux` 0.8.4 exactly. The code changes fix the warning
 *"the following packages contain code that will be rejected by a future version of Rust:
-buf_redux v0.8.4"* (lint `trailing_semicolon_in_macro`).
+buf_redux v0.8.4"* (lint `trailing_semicolon_in_macro`) and remove the dependency on the
+unmaintained `safemem` crate
+([RUSTSEC-2023-0081](https://rustsec.org/advisories/RUSTSEC-2023-0081.html)).
 
 ## Migrating from `buf_redux`
 

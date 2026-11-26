@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.6 (2026-11-26)
+
+- Removed the dependency on `safemem`, which is unmaintained
+  ([RUSTSEC-2023-0081](https://rustsec.org/advisories/RUSTSEC-2023-0081.html)). The two calls
+  are replaced by `slice::copy_within` and a plain loop; behaviour is unchanged. Without the
+  `slice-deque` feature the crate now depends on `memchr` only.
+
 ## 0.8.5 (2026-11-19)
 
 No library code changes.
