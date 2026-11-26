@@ -154,8 +154,6 @@
 
 extern crate memchr;
 
-extern crate safemem;
-
 use std::any::Any;
 use std::cell::RefCell;
 use std::io::prelude::*;
@@ -1305,5 +1303,7 @@ where F: Fn(&mut Write, &mut Buffer, io::Error)
 #[cfg(not(feature = "nightly"))]
 fn init_buffer<R: Read + ?Sized>(_r: &R, buf: &mut [u8]) {
     // we can't trust a reader without nightly
-    safemem::write_bytes(buf, 0);
+    for byte in buf.iter_mut() {
+        *byte = 0;
+    }
 }
