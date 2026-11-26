@@ -6,7 +6,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use safemem;
 
 use std::cmp;
 
@@ -72,8 +71,8 @@ impl StdBuf {
         // simply move the bytes down to the beginning
         let len = self.len();
 
-        safemem::copy_over(unsafe { self.buf.as_mut_slice() },
-                           self.pos, 0, len);
+        let pos = self.pos;
+        unsafe { self.buf.as_mut_slice() }.copy_within(pos .. pos + len, 0);
 
         self.pos = 0;
         self.end = len;

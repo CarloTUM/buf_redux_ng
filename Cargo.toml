@@ -17,9 +17,6 @@ repository = "https://github.com/CarloTUM/buf_redux_ng"
 [dependencies.memchr]
 version = "2.0"
 
-[dependencies.safemem]
-version = "0.3"
-
 [features]
 default = ["slice-deque"]
 nightly = ["slice-deque/unstable"]
